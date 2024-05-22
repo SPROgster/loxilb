@@ -1,5 +1,5 @@
 # Download base image ubuntu 20.04 for build
-FROM ubuntu:20.04 as build
+FROM debian:12 as build
 
 # Disable Prompt During Packages Installation
 ARG DEBIAN_FRONTEND=noninteractive
@@ -21,26 +21,27 @@ RUN mkdir -p /opt/loxilb && \
     # Dev and util packages
     apt-get install -y clang llvm libelf-dev libpcap-dev vim net-tools \
     elfutils dwarves git libbsd-dev bridge-utils wget unzip build-essential \
-    bison flex sudo iproute2 pkg-config tcpdump iputils-ping curl bash-completion && \
+    bison flex sudo iproute2 pkg-config tcpdump iputils-ping curl bash-completion
     # Install loxilb's custom ntc tool
-    wget https://github.com/loxilb-io/iproute2/archive/refs/heads/main.zip && \
+RUN wget https://github.com/loxilb-io/iproute2/archive/refs/heads/main.zip && \
     unzip main.zip && cd iproute2-main/ && rm -fr libbpf && wget https://github.com/loxilb-io/libbpf/archive/refs/heads/main.zip && \
     unzip main.zip && mv libbpf-main libbpf && cd libbpf/src/ && mkdir build && \
     make install && DESTDIR=build OBJDIR=build make install && cd - && \
     export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:`pwd`/libbpf/src/ && \
     LIBBPF_FORCE=on LIBBPF_DIR=`pwd`/libbpf/src/build ./configure && make && \
-    cp -f tc/tc /usr/local/sbin/ntc && cd .. && rm -fr main.zip iproute2-main && \
+    cp -f tc/tc /usr/local/sbin/ntc && cd .. && rm -fr main.zip iproute2-main
     # Install bpftool
-    git clone --recurse-submodules https://github.com/libbpf/bpftool.git && cd bpftool/src/ && \
+RUN git clone --recurse-submodules https://github.com/libbpf/bpftool.git && cd bpftool/src/ && \
     git switch --detach v7.2.0 && \
     make clean && 	make -j $(nproc) && cp -f ./bpftool /usr/local/sbin/bpftool && \
-    cd - && rm -fr bpftool && \
+    cd - && rm -fr bpftool
     # Install loxicmd
-    git clone https://github.com/loxilb-io/loxicmd.git && cd loxicmd && go get . && \
+RUN git clone https://github.com/loxilb-io/loxicmd.git && cd loxicmd && go get . && \
     make && cp ./loxicmd /usr/local/sbin/loxicmd && cd - && rm -fr loxicmd && \
-    /usr/local/sbin/loxicmd completion bash > /etc/bash_completion.d/loxi_completion && \
+    /usr/local/sbin/loxicmd completion bash > /etc/bash_completion.d/loxi_completion
     # Install loxilb
-    git clone --recurse-submodules https://github.com/loxilb-io/loxilb  /root/loxilb-io/loxilb/ && \
+RUN git clone --recurse-submodules https://github.com/SPROgster/loxilb  /root/loxilb-io/loxilb/ && \
+    ln -s /usr/bin/clang-14 /usr/bin/clang-13 && \
     cd /root/loxilb-io/loxilb/ && go get . && if [ "$arch" = "arm64" ] ; then DOCKER_BUILDX_ARM64=true make; \
     else make ;fi && cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && \
     cp loxilb-ebpf/utils/mkllb_cgroup.sh /usr/local/sbin/mkllb_cgroup && \
@@ -48,16 +49,16 @@ RUN mkdir -p /opt/loxilb && \
     cp /root/loxilb-io/loxilb/loxilb /usr/local/sbin/loxilb && \
     rm -fr /root/loxilb-io/loxilb/* && rm -fr /root/loxilb-io/loxilb/.git && \
     rm -fr /root/loxilb-io/loxilb/.github && mkdir -p /root/loxilb-io/loxilb/ && \
-    cp /usr/local/sbin/loxilb /root/loxilb-io/loxilb/loxilb && rm /usr/local/sbin/loxilb && \
+    cp /usr/local/sbin/loxilb /root/loxilb-io/loxilb/loxilb && rm /usr/local/sbin/loxilb
     # Install gobgp
-    wget https://github.com/osrg/gobgp/releases/download/v3.5.0/gobgp_3.5.0_linux_amd64.tar.gz && \
+RUN wget https://github.com/osrg/gobgp/releases/download/v3.5.0/gobgp_3.5.0_linux_amd64.tar.gz && \
     tar -xzf gobgp_3.5.0_linux_amd64.tar.gz &&  rm gobgp_3.5.0_linux_amd64.tar.gz && \
     mv gobgp* /usr/sbin/ && rm LICENSE README.md && \
     apt-get purge -y clang llvm libelf-dev libpcap-dev libbsd-dev build-essential \
     elfutils dwarves git bison flex wget unzip && apt-get -y autoremove && \
-    apt-get install -y libllvm10 && \
+    apt-get install -y libllvm13
     # cleanup unnecessary packages
-    if [ "$arch" = "arm64" ] ; then apt purge -y gcc-multilib-arm-linux-gnueabihf; else apt-get update && apt purge -y gcc-multilib;fi && \
+RUN if [ "$arch" = "arm64" ] ; then apt purge -y gcc-multilib-arm-linux-gnueabihf; else apt-get update && apt purge -y gcc-multilib;fi && \
     rm -rf /var/lib/apt/lists/* && apt clean && \
     echo "if [ -f /etc/bash_completion ] && ! shopt -oq posix; then" >> /root/.bashrc && \
     echo "    . /etc/bash_completion" >> /root/.bashrc && \
@@ -68,7 +69,7 @@ RUN mkdir -p /opt/loxilb && \
 # COPY ./llb_ebpf_main.o.rep* /opt/loxilb/llb_ebpf_main.o
 # COPY ./llb_xdp_main.o.rep* /opt/loxilb/llb_xdp_main.o
 
-FROM ubuntu:20.04
+FROM debian:12
 
 # LABEL about the loxilb image
 LABEL description="loxilb official docker image"
@@ -81,7 +82,7 @@ ENV PATH="${PATH}:/usr/local/go/bin"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
 
 RUN apt-get update && apt-get install -y --no-install-recommends sudo \
-    libbsd-dev iproute2 tcpdump bridge-utils net-tools libllvm10 && \
+    libbsd-dev iproute2 tcpdump bridge-utils net-tools libllvm13 && \
     rm -rf /var/lib/apt/lists/* && apt clean
 
 COPY --from=build /usr/lib64/libbpf* /usr/lib64/
