@@ -11,7 +11,7 @@ subsys-clean:
 	cd loxilb-ebpf && $(MAKE) clean
 
 build: subsys
-	@go build -o ${bin} -ldflags="-X 'main.buildInfo=${shell date '+%Y_%m_%d'}-${shell git branch --show-current}'"
+	@go build -gcflags "all=-N -l" -o ${bin} -ldflags="-X 'main.buildInfo=${shell date '+%Y_%m_%d'}-${shell git branch --show-current}'"
 
 clean: subsys-clean
 	go clean

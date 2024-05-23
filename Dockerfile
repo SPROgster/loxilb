@@ -40,8 +40,11 @@ RUN mkdir -p /opt/loxilb && \
     git clone https://github.com/loxilb-io/loxicmd.git && cd loxicmd && go get . && \
     make && cp ./loxicmd /usr/local/sbin/loxicmd && cd - && rm -fr loxicmd && \
     /usr/local/sbin/loxicmd completion bash > /etc/bash_completion.d/loxi_completion && \
-    # Install loxilb
-    git clone --recurse-submodules https://github.com/SPRogster/loxilb  /root/loxilb-io/loxilb/ && \
+    wget https://github.com/osrg/gobgp/releases/download/v3.5.0/gobgp_3.5.0_linux_amd64.tar.gz && \
+    tar -xzf gobgp_3.5.0_linux_amd64.tar.gz &&  rm gobgp_3.5.0_linux_amd64.tar.gz && \
+    mv gobgp* /usr/sbin/ && rm LICENSE README.md
+    # Install loxilb \
+RUN git clone --recurse-submodules https://github.com/SPRogster/loxilb  /root/loxilb-io/loxilb/ && \
     cd /root/loxilb-io/loxilb/ && git switch sync && go get . && if [ "$arch" = "arm64" ] ; then DOCKER_BUILDX_ARM64=true make; \
     else make ;fi && cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && \
     cp loxilb-ebpf/utils/mkllb_cgroup.sh /usr/local/sbin/mkllb_cgroup && \
@@ -49,12 +52,9 @@ RUN mkdir -p /opt/loxilb && \
     cp /root/loxilb-io/loxilb/loxilb /usr/local/sbin/loxilb && \
     rm -fr /root/loxilb-io/loxilb/* && rm -fr /root/loxilb-io/loxilb/.git && \
     rm -fr /root/loxilb-io/loxilb/.github && mkdir -p /root/loxilb-io/loxilb/ && \
-    cp /usr/local/sbin/loxilb /root/loxilb-io/loxilb/loxilb && rm /usr/local/sbin/loxilb && \
+    cp /usr/local/sbin/loxilb /root/loxilb-io/loxilb/loxilb && rm /usr/local/sbin/loxilb
     # Install gobgp
-    wget https://github.com/osrg/gobgp/releases/download/v3.5.0/gobgp_3.5.0_linux_amd64.tar.gz && \
-    tar -xzf gobgp_3.5.0_linux_amd64.tar.gz &&  rm gobgp_3.5.0_linux_amd64.tar.gz && \
-    mv gobgp* /usr/sbin/ && rm LICENSE README.md && \
-    apt-get purge -y clang llvm libelf-dev libpcap-dev libbsd-dev build-essential \
+RUN apt-get purge -y clang llvm libelf-dev libpcap-dev libbsd-dev build-essential \
     elfutils dwarves git bison flex wget unzip && apt-get -y autoremove && \
     apt-get install -y libllvm10 && \
     # cleanup unnecessary packages
