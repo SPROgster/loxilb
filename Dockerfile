@@ -8,6 +8,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV PATH="${PATH}:/usr/local/go/bin"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib64/"
 
+ENV arch=amd64
 # Install loxilb related packages
 RUN mkdir -p /opt/loxilb && \
     mkdir -p /root/loxilb-io/loxilb/ && \
@@ -40,8 +41,8 @@ RUN mkdir -p /opt/loxilb && \
     make && cp ./loxicmd /usr/local/sbin/loxicmd && cd - && rm -fr loxicmd && \
     /usr/local/sbin/loxicmd completion bash > /etc/bash_completion.d/loxi_completion && \
     # Install loxilb
-    git clone --recurse-submodules https://github.com/loxilb-io/loxilb  /root/loxilb-io/loxilb/ && \
-    cd /root/loxilb-io/loxilb/ && go get . && if [ "$arch" = "arm64" ] ; then DOCKER_BUILDX_ARM64=true make; \
+    git clone --recurse-submodules https://github.com/SPRogster/loxilb  /root/loxilb-io/loxilb/ && \
+    cd /root/loxilb-io/loxilb/ && git switch sync && go get . && if [ "$arch" = "arm64" ] ; then DOCKER_BUILDX_ARM64=true make; \
     else make ;fi && cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && \
     cp loxilb-ebpf/utils/mkllb_cgroup.sh /usr/local/sbin/mkllb_cgroup && \
     cp /root/loxilb-io/loxilb/loxilb-ebpf/kernel/loxilb_dp_debug  /usr/local/sbin/loxilb_dp_debug && \

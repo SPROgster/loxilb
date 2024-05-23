@@ -1189,7 +1189,7 @@ func (ct *DpCtInfo) convDPCt2GoObjFixup(ctKey *C.struct_dp_ct_key, ctDat *C.stru
 		t := (*C.ct_tcp_pinf_t)(unsafe.Pointer(&ctDat.pi))
 		switch {
 		case t.state == C.CT_TCP_CLOSED:
-			ct.CState = "closed"
+			ct.CState = "sync-sent"
 		case t.state == C.CT_TCP_SS:
 			ct.CState = "sync-sent"
 		case t.state == C.CT_TCP_SA:
@@ -1837,6 +1837,7 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 	} else {
 		cte := mh.dpEbpf.ctMap[cti.Key()]
 		if cte != nil {
+			tk.LogIt(tk.LogDebug, "[CT] %s - %s exists not sync\n", opStr, cti.String())
 			if cte.CState == cti.CState && cte.CAct == cti.CAct {
 				return
 			}
