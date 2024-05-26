@@ -1842,6 +1842,8 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 				return
 			}
 			delete(mh.dpEbpf.ctMap, cti.Key())
+		} else {
+			mh.dp.DpXsyncRPC(DpSyncAdd, cti)
 		}
 		mh.dpEbpf.ctMap[cti.Key()] = cti
 		if cti.CState == "est" {
