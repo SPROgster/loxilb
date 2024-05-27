@@ -46,9 +46,11 @@ RUN mkdir -p /opt/loxilb && \
     # Install loxilb \
 ENV build=1
 ENV CFLAGS_ALL="-DHAVE_DP_FC=1 -DHAVE_DP_EXTCT=1 -DHAVE_DP_SCTP_SUM=1 -DHAVE_DP_CT_SYNC=1 -DMAX_REAL_CPUS=40 -DHAVE_DP_RSS=1"
-RUN git clone --recurse-submodules https://github.com/SPRogster/loxilb  /root/loxilb-io/loxilb/ && \
-    cd /root/loxilb-io/loxilb/ && git switch sync && go get . && if [ "$arch" = "arm64" ] ; then DOCKER_BUILDX_ARM64=true make; \
-    else make ;fi && cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && \
+#RUN git clone --recurse-submodules https://github.com/SPRogster/loxilb  /root/loxilb-io/loxilb/ && \
+COPY . /root/loxilb-io/loxilb/
+RUN ls /root/loxilb-io/loxilb/loxilb-ebpf
+RUN cd /root/loxilb-io/loxilb/ && if [ "$arch" = "arm64" ] ; then DOCKER_BUILDX_ARM64=true make; \
+    else make; fi && cp loxilb-ebpf/utils/mkllb_bpffs.sh /usr/local/sbin/mkllb_bpffs && \
     cp loxilb-ebpf/utils/mkllb_cgroup.sh /usr/local/sbin/mkllb_cgroup && \
     cp /root/loxilb-io/loxilb/loxilb-ebpf/kernel/loxilb_dp_debug  /usr/local/sbin/loxilb_dp_debug && \
     cp /root/loxilb-io/loxilb/loxilb /usr/local/sbin/loxilb && \
