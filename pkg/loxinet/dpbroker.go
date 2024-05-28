@@ -550,17 +550,17 @@ func (dp *DpH) DpXsyncRPC(op DpSyncOpT, arg interface{}) int {
 					return -1
 				}
 
-				var tmpCti *DpCtInfo
-				if cti == nil {
-					tmpCti = &blkCti[0]
-				} else {
-					tmpCti = cti
-				}
-				// FIXME - There is a race condition here
-				cIState, _ := mh.has.CIStateGetInst(tmpCti.CI)
-				if cIState != "MASTER" {
-					return 0
-				}
+				//var tmpCti *DpCtInfo
+				//if cti == nil {
+				//	tmpCti = &blkCti[0]
+				//} else {
+				//	tmpCti = cti
+				//}
+				//// FIXME - There is a race condition here
+				//cIState, _ := mh.has.CIStateGetInst(tmpCti.CI)
+				//if cIState != "MASTER" {
+				//	return 0
+				//}
 			}
 			if cti != nil {
 				reply, err = dp.RPC.RPCHooks.RPCSend(pe, rpcCallStr, *cti)

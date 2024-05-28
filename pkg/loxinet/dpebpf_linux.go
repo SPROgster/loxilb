@@ -1816,13 +1816,20 @@ func dpCTMapNotifierWorker(cti *DpCtInfo) {
 	defer mh.dpEbpf.mtx.Unlock()
 
 	if addOp == false {
-		cti = mh.dpEbpf.ctMap[cti.Key()]
-		if cti == nil || cti.Deleted > 0 {
+		cte := mh.dpEbpf.ctMap[cti.Key()]
+		if cte == nil {
 			return
 		}
-		cti.Deleted = 1
-		cti.XSync = true
-		cti.NTs = time.Now()
+		// Why cti may be nil?
+		if cti.CState != cte.CState {
+			mh.dp.DpXsyncRPC(DpSyncAdd, cti)
+		}
+		if cte.Deleted > 0 {
+			return
+		}
+		cte.Deleted = 1
+		cte.XSync = true
+		cte.NTs = time.Now()
 		// Immediately notify for delete
 		//ret := mh.dp.DpXsyncRPC(DpSyncDelete, cti)
 		//if ret == 0 {
@@ -2057,7 +2064,7 @@ func (e *DpEbpfH) DpCtAdd(w *DpCtInfo) int {
 	r := mh.zr.Rules.GetNatLbRuleByServArgs(serv)
 	mh.mtx.Unlock()
 
-	if r == nil || len(w.PVal) == 0 || len(w.PKey) == 0 || w.CState != "est" {
+	if r == nil || len(w.PVal) == 0 || len(w.PKey) == 0 {
 		tk.LogIt(tk.LogDebug, "Invalid CT op/No LB - %v\n", serv)
 		return EbpfErrCtAdd
 	}
